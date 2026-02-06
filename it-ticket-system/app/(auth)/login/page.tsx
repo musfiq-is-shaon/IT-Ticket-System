@@ -366,7 +366,7 @@ function LoginForm() {
 
             <button
               type="submit"
-              disabled={loading || (ticketCode && fullName && !ticketValidation?.success)}
+              disabled={!!(loading || (ticketCode && fullName && !ticketValidation?.success))}
               className="btn-primary w-full justify-center"
             >
               {loading ? (
