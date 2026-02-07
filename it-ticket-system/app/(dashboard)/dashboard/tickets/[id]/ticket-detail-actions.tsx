@@ -48,9 +48,10 @@ interface TicketDetailActionsProps {
   ticket: Ticket;
   profile: Profile;
   canManage: boolean;
+  canAssign: boolean;
 }
 
-export function TicketDetailActions({ ticket, profile, canManage }: TicketDetailActionsProps) {
+export function TicketDetailActions({ ticket, profile, canManage, canAssign }: TicketDetailActionsProps) {
   const router = useRouter();
   const supabase = createClient();
   const [loading, setLoading] = useState(false);
@@ -120,11 +121,13 @@ export function TicketDetailActions({ ticket, profile, canManage }: TicketDetail
   };
 
   const fetchTeamMembers = async () => {
+    // Only fetch employees (owner, admin, agent) - not customers
     const { data } = await supabase
       .from('profiles')
       .select('id, full_name, email, role')
       .eq('organization_id', profile.organization_id || '')
-      .neq('id', profile.id);
+      .neq('id', profile.id)
+      .in('role', ['owner', 'admin', 'agent']);
 
     if (data) {
       setTeamMembers(data as TeamMember[]);
@@ -208,7 +211,7 @@ export function TicketDetailActions({ ticket, profile, canManage }: TicketDetail
           </div>
 
           {/* Assign */}
-          {canManage && (
+          {canAssign && (
             <div>
               <label className="text-xs text-slate-500 uppercase tracking-wide block mb-2">
                 Assign To

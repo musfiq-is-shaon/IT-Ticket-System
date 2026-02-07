@@ -121,7 +121,7 @@ export default async function DashboardLayout({
   };
   const currentRoleBadge = roleBadge[userRole];
 
-// Navigation items with role-based access
+  // Navigation items with role-based access
   const navItems = [
     {
       label: 'Dashboard',
@@ -151,6 +151,12 @@ export default async function DashboardLayout({
       href: '/dashboard/team',
       icon: Users,
       requireAdmin: true,
+    },
+    {
+      label: 'Customers',
+      href: '/dashboard/customers',
+      icon: Building2,
+      onlyForOwnerAndAdmin: true,
     },
     {
       label: 'Settings',

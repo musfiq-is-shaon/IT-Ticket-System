@@ -11,12 +11,10 @@ interface InviteMemberModalProps {
   onInvitationCreated: () => void;
 }
 
-type UserRole = 'admin' | 'agent' | 'requester';
+type UserRole = 'agent';
 
 const ROLES: { value: UserRole; label: string; description: string }[] = [
-  { value: 'admin', label: 'Admin', description: 'Can manage team and settings' },
   { value: 'agent', label: 'Agent', description: 'Can handle tickets' },
-  { value: 'requester', label: 'Customer', description: 'Can submit tickets' },
 ];
 
 export default function InviteMemberModal({ 

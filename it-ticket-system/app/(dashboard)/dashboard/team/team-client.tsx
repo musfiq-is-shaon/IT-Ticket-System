@@ -174,68 +174,76 @@ export default function TeamClient({
         </div>
       )}
 
-      {/* Team stats */}
+      {/* Team stats - only show cards with members */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card">
-          <div className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Owners</p>
-                <p className="text-xl font-bold text-slate-900">
-                  {teamMembers.filter((m) => m.role === 'owner').length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="card">
-          <div className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-indigo-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Admins</p>
-                <p className="text-xl font-bold text-slate-900">
-                  {teamMembers.filter((m) => m.role === 'admin').length}
-                </p>
+        {teamMembers.filter((m) => m.role === 'owner').length > 0 && (
+          <div className="card">
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Owners</p>
+                  <p className="text-xl font-bold text-slate-900">
+                    {teamMembers.filter((m) => m.role === 'owner').length}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="card">
-          <div className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Agents</p>
-                <p className="text-xl font-bold text-slate-900">
-                  {teamMembers.filter((m) => m.role === 'agent').length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="card">
-          <div className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <Users className="w-5 h-5 text-slate-600" />
-              </div>
-              <div>
-                <p className="text-sm text-slate-600">Customers</p>
-                <p className="text-xl font-bold text-slate-900">
-                  {teamMembers.filter((m) => m.role === 'requester').length}
-                </p>
+        )}
+        {teamMembers.filter((m) => m.role === 'admin').length > 0 && (
+          <div className="card">
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Admins</p>
+                  <p className="text-xl font-bold text-slate-900">
+                    {teamMembers.filter((m) => m.role === 'admin').length}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
+        {teamMembers.filter((m) => m.role === 'agent').length > 0 && (
+          <div className="card">
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Agents</p>
+                  <p className="text-xl font-bold text-slate-900">
+                    {teamMembers.filter((m) => m.role === 'agent').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {teamMembers.filter((m) => m.role === 'requester').length > 0 && (
+          <div className="card">
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-slate-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Customers</p>
+                  <p className="text-xl font-bold text-slate-900">
+                    {teamMembers.filter((m) => m.role === 'requester').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Team list */}

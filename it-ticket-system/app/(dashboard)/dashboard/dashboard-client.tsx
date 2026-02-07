@@ -123,10 +123,13 @@ export default function DashboardClient({ profile, tickets, stats }: DashboardCl
             Here&apos;s what&apos;s happening with your tickets today.
           </p>
         </div>
-        <Link href="/dashboard/tickets/new" className="btn-primary">
-          <Plus className="w-4 h-4" />
-          New Ticket
-        </Link>
+        {/* Only show New Ticket button for customers */}
+        {isRequester && (
+          <Link href="/dashboard/tickets/new" className="btn-primary">
+            <Plus className="w-4 h-4" />
+            New Ticket
+          </Link>
+        )}
       </div>
 
       {/* Role-specific quick actions */}

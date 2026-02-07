@@ -53,6 +53,12 @@ export function TicketComments({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Filter comments - customers (requesters) cannot see internal comments
+  const isEmployee = ['owner', 'admin', 'agent'].includes(currentUserRole);
+  const visibleComments = isEmployee 
+    ? comments 
+    : comments.filter(comment => !comment.is_internal);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -101,14 +107,19 @@ export function TicketComments({
           Comments
         </h2>
         <p className="text-sm text-slate-500 mt-1">
-          {comments.length} comment{comments.length !== 1 ? 's' : ''}
+          {visibleComments.length} comment{visibleComments.length !== 1 ? 's' : ''}
+          {!isEmployee && comments.length > visibleComments.length && (
+            <span className="ml-2 text-xs text-yellow-600">
+              ({comments.length - visibleComments.length} internal note{comments.length - visibleComments.length !== 1 ? 's' : ''} hidden)
+            </span>
+          )}
         </p>
       </div>
 
       {/* Comments list */}
       <div className="divide-y divide-slate-100">
-        {comments.length > 0 ? (
-          comments.map((comment) => (
+        {visibleComments.length > 0 ? (
+          visibleComments.map((comment) => (
             <div
               key={comment.id}
               className={`p-4 ${comment.is_internal ? 'bg-yellow-50/50' : ''}`}

@@ -46,11 +46,12 @@ async function getTeamData(userId: string) {
     .eq('id', orgId)
     .single();
 
-  // Get all team members
+  // Get all team members (employees only - owner, admin, agent)
   const { data: teamMembers } = await supabase
     .from('profiles')
     .select('*')
     .eq('organization_id', orgId)
+    .in('role', ['owner', 'admin', 'agent'])
     .order('role')
     .order('full_name');
 

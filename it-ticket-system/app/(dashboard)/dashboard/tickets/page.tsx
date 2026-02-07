@@ -63,16 +63,27 @@ async function getTickets(userId: string, searchParams: SearchParams) {
     return { profile: profile as Profile, tickets: [], filters: searchParams };
   }
 
-  // Build query - simpler approach like dashboard
+  // Build query with profile joins
   let query = supabase
     .from('tickets')
-    .select('*')
+    .select(`
+      *,
+      created_by_profile:profiles!created_by(id, full_name, email, avatar_url, role),
+      assigned_to_profile:profiles!assigned_to(id, full_name, email, avatar_url, role)
+    `)
     .eq('organization_id', orgId)
     .order('created_at', { ascending: false });
 
   // Apply role-based filtering
   if (profile.role === 'requester') {
-    query = query.eq('created_by', userId);
+    // For customers, show tickets matching their ticket_code OR tickets they created
+    // This ensures consistency with the dashboard which shows by ticket_code
+    if (profile.ticket_code) {
+      query = query.or(`ticket_code.eq.${profile.ticket_code},created_by.eq.${userId}`);
+    } else {
+      // Fallback: show tickets they created
+      query = query.eq('created_by', userId);
+    }
   } else if (profile.role === 'agent') {
     query = query.eq('assigned_to', userId);
   }
@@ -121,6 +132,7 @@ export default async function TicketsPage({
 
   const userRole = profile.role;
   const canManage = userRole === 'admin' || userRole === 'owner';
+  const isRequester = userRole === 'requester';
 
   return (
     <div className="space-y-6">
@@ -132,10 +144,13 @@ export default async function TicketsPage({
             Manage and track all support tickets
           </p>
         </div>
-        <Link href="/dashboard/tickets/new" className="btn-primary">
-          <Plus className="w-4 h-4" />
-          New Ticket
-        </Link>
+        {/* Only show New Ticket button for customers */}
+        {isRequester && (
+          <Link href="/dashboard/tickets/new" className="btn-primary">
+            <Plus className="w-4 h-4" />
+            New Ticket
+          </Link>
+        )}
       </div>
 
       {/* Filters */}

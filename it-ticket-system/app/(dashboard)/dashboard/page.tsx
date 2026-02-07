@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import DashboardClient from './dashboard-client';
 import SetupLoader from './setup-loader';
+import TicketCodeEntry from './ticket-code-entry';
+import InvitationCodeEntry from './invitation-code-entry';
 
 // Types
 interface Profile {
@@ -86,12 +88,15 @@ async function getDashboardData(userId: string): Promise<{
     .limit(10);
 
   // Apply role-based filtering
-  if (profile.role === 'requester' && profile.ticket_code) {
-    // Customer: Only show the ticket matching their ticket_code
-    ticketsQuery = ticketsQuery.eq('ticket_code', profile.ticket_code);
-  } else if (profile.role === 'requester') {
-    // Fallback: show tickets they created
-    ticketsQuery = ticketsQuery.eq('created_by', userId);
+  if (profile.role === 'requester') {
+    // For customers, show tickets matching their ticket_code OR tickets they created
+    // This ensures consistency with the My Tickets page
+    if (profile.ticket_code) {
+      ticketsQuery = ticketsQuery.or(`ticket_code.eq.${profile.ticket_code},created_by.eq.${userId}`);
+    } else {
+      // Fallback: show tickets they created
+      ticketsQuery = ticketsQuery.eq('created_by', userId);
+    }
   } else if (profile.role === 'agent') {
     ticketsQuery = ticketsQuery.eq('assigned_to', userId);
   }
@@ -108,8 +113,8 @@ async function getDashboardData(userId: string): Promise<{
   let statsData = (await statsQuery).data || [];
   
   if (profile.role === 'requester' && profile.ticket_code) {
-    // Customer: Only count their ticket by ticket_code
-    statsData = statsData.filter(t => t.ticket_code === profile.ticket_code);
+    // Customer: Count tickets matching their ticket_code OR they created
+    statsData = statsData.filter(t => t.ticket_code === profile.ticket_code || t.created_by === userId);
   } else if (profile.role === 'requester') {
     // Fallback
     statsData = statsData.filter(t => t.created_by === userId);
@@ -145,6 +150,28 @@ export default async function DashboardPage() {
   // If no profile exists, show the setup loader which auto-refreshes
   if (!data) {
     return <SetupLoader email={user.email || ''} />;
+  }
+
+  // If customer has no organization, show ticket code entry
+  if (data.profile.role === 'requester' && !data.profile.organization_id) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          <TicketCodeEntry />
+        </div>
+      </div>
+    );
+  }
+
+  // If employee has no organization, show invitation code entry
+  if (data.profile.role === 'agent' && !data.profile.organization_id) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          <InvitationCodeEntry />
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -2,8 +2,8 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { useState, useCallback } from 'react';
-import { Mail, Lock, User, Building2, Loader2, ArrowRight, MessageSquare, AlertCircle, CheckCircle2, Users, Key, Shield, UserCheck, ClipboardList, Ticket } from 'lucide-react';
+import { useState } from 'react';
+import { Mail, Lock, User, Building2, Loader2, ArrowRight, MessageSquare, AlertCircle, CheckCircle2, Users, Shield, Ticket } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
@@ -60,12 +60,12 @@ const USER_TYPES: UserTypeOption[] = [
   {
     value: 'customer',
     label: 'Customer',
-    description: 'Join an organization using a ticket code',
+    description: 'Create an account and enter ticket code in dashboard',
     icon: <Ticket className="w-5 h-5" />,
     role: 'requester',
     roleDescription: 'Customer access',
     features: [
-      'Submit support tickets',
+      'Create support tickets',
       'Track your requests',
       'Communicate with support',
       'View ticket history',
@@ -88,9 +88,7 @@ export default function SignupPage() {
   const [organizationName, setOrganizationName] = useState('');
   const [userType, setUserType] = useState<UserType>('owner');
   const [invitationCode, setInvitationCode] = useState('');
-  const [ticketCode, setTicketCode] = useState('');
   const [validatingInvitation, setValidatingInvitation] = useState(false);
-  const [validatingTicket, setValidatingTicket] = useState(false);
   const [invitationData, setInvitationData] = useState<{
     organization_id: string;
     organization_name: string;
@@ -98,23 +96,16 @@ export default function SignupPage() {
     email: string | null;
     expires_at: string;
   } | null>(null);
-  const [ticketData, setTicketData] = useState<{
-    ticket_id: string;
-    ticket_title: string;
-    organization_id: string;
-    organization_name: string;
-  } | null>(null);
   const [invitationError, setInvitationError] = useState<string | null>(null);
-  const [ticketError, setTicketError] = useState<string | null>(null);
   const [step, setStep] = useState<'type' | 'details'>('type');
 
   // Get Supabase client
-  const getSupabaseClient = useCallback(() => {
+  const getSupabaseClient = () => {
     return createClient();
-  }, []);
+  };
 
   // Validate invitation code (for employees)
-  const validateInvitation = useCallback(async (code: string) => {
+  const validateInvitation = async (code: string) => {
     const supabase = getSupabaseClient();
     
     if (!code.trim()) {
@@ -157,63 +148,15 @@ export default function SignupPage() {
     } finally {
       setValidatingInvitation(false);
     }
-  }, [getSupabaseClient]);
-
-  // Validate ticket code (for customers)
-  const validateTicketCode = useCallback(async (code: string) => {
-    const supabase = getSupabaseClient();
-    
-    if (!code.trim()) {
-      setTicketData(null);
-      setTicketError(null);
-      return;
-    }
-
-    setValidatingTicket(true);
-    setTicketError(null);
-
-    try {
-      const { data, error: rpcError } = await supabase.rpc('validate_ticket_code', {
-        p_ticket_code: code.trim(),
-      });
-
-      if (rpcError) {
-        setTicketError('Failed to validate ticket code. Please try again.');
-        setTicketData(null);
-        return;
-      }
-
-      if (data?.success) {
-        setTicketData({
-          ticket_id: data.ticket_id,
-          ticket_title: data.ticket_title,
-          organization_id: data.organization_id,
-          organization_name: data.organization_name,
-        });
-        setTicketError(null);
-      } else {
-        setTicketError(data?.error || 'Invalid ticket code');
-        setTicketData(null);
-      }
-    } catch (err) {
-      console.error('Ticket code validation error:', err);
-      setTicketError('Failed to validate ticket code. Please try again.');
-      setTicketData(null);
-    } finally {
-      setValidatingTicket(false);
-    }
-  }, [getSupabaseClient]);
+  };
 
   // Handle user type change
   const handleUserTypeChange = (type: UserType) => {
     setUserType(type);
     setOrganizationName('');
     setInvitationCode('');
-    setTicketCode('');
     setInvitationData(null);
-    setTicketData(null);
     setInvitationError(null);
-    setTicketError(null);
     if (type === 'owner') {
       setStep('details');
     } else {
@@ -227,12 +170,6 @@ export default function SignupPage() {
     await validateInvitation(code);
   };
 
-  // Handle ticket code change
-  const handleTicketCodeChange = async (code: string) => {
-    setTicketCode(code);
-    await validateTicketCode(code);
-  };
-
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -244,90 +181,7 @@ export default function SignupPage() {
       return;
     }
 
-    // Customer: Only need ticket code and name
-    if (userType === 'customer') {
-      if (!ticketData) {
-        if (!ticketCode.trim()) {
-          setError('Please enter your ticket code');
-          return;
-        }
-        setError('Please enter a valid ticket code');
-        return;
-      }
-      
-      setLoading(true);
-
-      try {
-        const supabase = getSupabaseClient();
-        
-        // For customers: Generate random email and password
-        // Customer will use magic link or just get auto-logged in
-        const randomEmail = `customer+${Date.now()}@ticket.local`;
-        const randomPassword = Math.random().toString(36).slice(-12);
-        
-        // Sign up with generated credentials
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email: randomEmail,
-          password: randomPassword,
-          options: {
-            data: {
-              full_name: fullName.trim(),
-            },
-          },
-        });
-
-        if (signUpError) {
-          setError(signUpError.message);
-          setLoading(false);
-          return;
-        }
-
-        if (!data.user) {
-          setError('Failed to create account');
-          setLoading(false);
-          return;
-        }
-
-        // Join organization via ticket code
-        const { data: joinData, error: rpcError } = await supabase.rpc(
-          'join_organization_by_ticket',
-          {
-            p_user_id: data.user.id,
-            p_full_name: fullName.trim(),
-            p_email: randomEmail,
-            p_ticket_code: ticketCode.trim().toUpperCase(),
-          }
-        );
-
-        if (rpcError) {
-          console.error('Join organization via ticket error:', rpcError);
-          setError('Failed to join organization. Please try again.');
-          setLoading(false);
-          return;
-        }
-
-        if (!joinData?.success) {
-          console.error('Join organization via ticket failed:', joinData);
-          setError(joinData?.error || 'Failed to join organization. Please try again.');
-          setLoading(false);
-          return;
-        }
-
-        setSuccess('Account created successfully! Redirecting to dashboard...');
-        setTimeout(() => {
-          router.push('/dashboard');
-          router.refresh();
-        }, 1500);
-      } catch (err) {
-        console.error('Signup error:', err);
-        setError('An unexpected error occurred. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    // Owner and Employee: Need email and password
+    // All users now need email and password
     if (!email.trim()) {
       setError('Please enter your email');
       return;
@@ -358,6 +212,7 @@ export default function SignupPage() {
         return;
       }
     }
+    // Customers don't need additional validation at signup
 
     setLoading(true);
 
@@ -371,6 +226,7 @@ export default function SignupPage() {
         options: {
           data: {
             full_name: fullName.trim(),
+            role: userType === 'customer' ? 'requester' : undefined,
           },
         },
       });
@@ -447,32 +303,25 @@ export default function SignupPage() {
 
         orgData = joinData;
       } else {
-        // Step 2c: Join organization via ticket code (for customers)
-        const { data: joinData, error: rpcError } = await supabase.rpc(
-          'join_organization_by_ticket',
-          {
-            p_user_id: data.user.id,
-            p_full_name: fullName.trim(),
-            p_email: email,
-            p_ticket_code: ticketCode.trim(),
-          }
-        );
+        // Customer: Just create profile, they'll join organization in dashboard
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            full_name: fullName.trim(),
+            email: email,
+            role: 'requester',
+            is_active: true,
+          });
 
-        if (rpcError) {
-          console.error('Join organization via ticket error:', rpcError);
-          setError('Failed to join organization. Please try again.');
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          setError('Failed to create profile. Please try again.');
           setLoading(false);
           return;
         }
 
-        if (!joinData?.success) {
-          console.error('Join organization via ticket failed:', joinData);
-          setError(joinData?.error || 'Failed to join organization. Please try again.');
-          setLoading(false);
-          return;
-        }
-
-        orgData = joinData;
+        orgData = { success: true };
       }
 
       console.log('Signup successful:', orgData);
@@ -494,7 +343,6 @@ export default function SignupPage() {
   const selectedType = USER_TYPES.find(t => t.value === userType)!;
   const showOwnerFields = userType === 'owner' && step === 'details';
   const showInvitationFields = userType === 'employee';
-  const showTicketFields = userType === 'customer';
   const isEmployeeOrCustomer = userType === 'employee' || userType === 'customer';
 
   return (
@@ -646,7 +494,7 @@ export default function SignupPage() {
                   Invitation Code
                 </label>
                 <div className="relative">
-                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     id="invitationCode"
                     type="text"
@@ -693,142 +541,84 @@ export default function SignupPage() {
               </div>
             )}
 
-            {/* Customer: Ticket Code Only */}
-            {showTicketFields && (
-              <div className="space-y-4">
-                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                  <p className="text-sm text-emerald-700">
-                    <strong>Quick Signup:</strong> Just enter your ticket code and name to get access.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="ticketCode" className="block text-sm font-medium text-slate-700">
-                    Ticket Code
-                  </label>
-                  <div className="relative">
-                    <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input
-                      id="ticketCode"
-                      type="text"
-                      value={ticketCode}
-                      onChange={(e) => handleTicketCodeChange(e.target.value.toUpperCase())}
-                      placeholder="TC-XXXX-XXXX-XXXX"
-                      className="input pl-10 font-mono"
-                      required={showTicketFields}
-                      disabled={loading || validatingTicket}
-                    />
-                    {validatingTicket && (
-                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 animate-spin" />
-                    )}
-                  </div>
-                  
-                  {/* Ticket validation status */}
-                  {ticketData && (
-                    <div className="p-3 rounded-lg bg-green-50 border border-green-200">
-                      <div className="flex items-center gap-2 text-sm text-green-700">
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span className="font-medium">Valid ticket code</span>
-                      </div>
-                      <div className="mt-2 text-xs text-green-600">
-                        <p>Organization: <strong>{ticketData.organization_name}</strong></p>
-                        <p>Ticket: <strong>{ticketData.ticket_title}</strong></p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {ticketError && (
-                    <div className="p-3 rounded-lg bg-red-50 border border-red-200">
-                      <div className="flex items-center gap-2 text-sm text-red-700">
-                        <AlertCircle className="w-4 h-4" />
-                        <span>{ticketError}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <p className="text-xs text-slate-500">
-                  Enter the ticket code provided by your support agent or from your ticket receipt.
-                  Your account will be created automatically using your name.
+            {/* Customer info box */}
+            {userType === 'customer' && (
+              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                <p className="text-sm text-emerald-700">
+                  <strong>Quick Signup:</strong> Create an account with your email and password. 
+                  After signup, enter your ticket code in the dashboard to access your organization&apos;s tickets.
                 </p>
               </div>
             )}
 
             {/* Email */}
-            {!showTicketFields && (
-              <div className="space-y-2">
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@company.com"
-                    className="input pl-10"
-                    required={!showTicketFields}
-                    disabled={loading}
-                  />
-                </div>
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="input pl-10"
+                  required
+                  disabled={loading}
+                />
               </div>
-            )}
+            </div>
 
             {/* Password */}
-            {!showTicketFields && (
-              <div className="space-y-2">
-                <label htmlFor="password" className="block text-sm font-medium text-slate-700">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="input pl-10"
-                    required={!showTicketFields}
-                    disabled={loading}
-                  />
-                </div>
-                <p className="text-xs text-slate-500">
-                  Minimum 8 characters
-                </p>
+            <div className="space-y-2">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="input pl-10"
+                  required
+                  disabled={loading}
+                />
               </div>
-            )}
+              <p className="text-xs text-slate-500">
+                Minimum 8 characters
+              </p>
+            </div>
 
             {/* Confirm Password */}
-            {!showTicketFields && (
-              <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    id="confirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="input pl-10"
-                    required={!showTicketFields}
-                    disabled={loading}
-                  />
-                </div>
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="input pl-10"
+                  required
+                  disabled={loading}
+                />
               </div>
-            )}
+            </div>
 
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading || 
-                (showInvitationFields && !invitationData && !!invitationCode) ||
-                (showTicketFields && !ticketData && !!ticketCode)
+                (showInvitationFields && !invitationData && !!invitationCode)
               }
               className="btn-primary w-full justify-center"
             >
@@ -910,7 +700,7 @@ export default function SignupPage() {
                   Create your own organization and invite team members to collaborate on support tickets.
                 </p>
                 <div className="flex items-center gap-2 text-sm text-slate-400">
-                  <UserCheck className="w-4 h-4" />
+                  <Shield className="w-4 h-4" />
                   <span>You&apos;ll be the owner with full control</span>
                 </div>
               </>
@@ -920,14 +710,14 @@ export default function SignupPage() {
                   Enter your invitation code to join your organization and start collaborating.
                 </p>
                 <div className="flex items-center gap-2 text-sm text-slate-400">
-                  <ClipboardList className="w-4 h-4" />
+                  <Users className="w-4 h-4" />
                   <span>Your role will be assigned by the organization</span>
                 </div>
               </>
             ) : (
               <>
                 <p className="text-slate-300">
-                  Enter the ticket code from your support agent or ticket receipt to access your organization.
+                  Create an account and enter the ticket code from your support agent in the dashboard to access your organization.
                 </p>
                 <div className="flex items-center gap-2 text-sm text-slate-400">
                   <Ticket className="w-4 h-4" />

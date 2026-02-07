@@ -197,6 +197,7 @@ export default async function TicketDetailPage({ params }: PageParams) {
   }
 
   const canManage = profile.role === 'admin' || profile.role === 'owner';
+  const canAssign = profile.role === 'owner'; // Only owners can assign tickets
   const isCreator = ticket.created_by === user.id;
   const isAssigned = ticket.assigned_to === user.id;
   const isCustomer = profile.role === 'requester';
@@ -287,6 +288,7 @@ export default async function TicketDetailPage({ params }: PageParams) {
               ticket={ticket}
               profile={profile}
               canManage={canManage}
+              canAssign={canAssign}
             />
           )}
 
