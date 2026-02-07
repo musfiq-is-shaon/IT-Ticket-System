@@ -95,9 +95,9 @@ export default function NewTicketPage() {
         return;
       }
 
-      // Only customers (requesters) can create tickets
-      if (profile.role !== 'requester') {
-        setError('Only customers can create support tickets. Employees cannot create tickets.');
+      // Only owners and customers (requesters) can create tickets
+      if (!['owner', 'requester'].includes(profile.role)) {
+        setError('Only owners and customers can create support tickets. Employees cannot create tickets.');
         return;
       }
 
