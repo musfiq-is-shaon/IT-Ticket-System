@@ -3,7 +3,7 @@ import { MessageSquare, Shield, Users, Zap, ArrowRight, CheckCircle, FileText, G
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -33,8 +33,8 @@ export default function HomePage() {
       <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-br from-blue-100/50 via-purple-50/30 to-cyan-50/50 rounded-full blur-3xl opacity-60" />
-          <div className="absolute bottom-0 right-0 w-[600px] h-[400px] bg-gradient-to-tl from-indigo-100/40 via-blue-50/30 to-transparent rounded-full blur-3xl opacity-40" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-br from-amber-100/50 via-orange-50/30 to-yellow-50/50 rounded-full blur-3xl opacity-60" />
+          <div className="absolute bottom-0 right-0 w-[600px] h-[400px] bg-gradient-to-tl from-orange-100/40 via-amber-50/30 to-transparent rounded-full blur-3xl opacity-40" />
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
@@ -88,7 +88,7 @@ export default function HomePage() {
 
           {/* Dashboard preview */}
           <div className="mt-16 relative animate-slide-up">
-            <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10 rounded-2xl blur-xl opacity-50" />
+            <div className="absolute -inset-4 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-yellow-500/10 rounded-2xl blur-xl opacity-50" />
             <div className="relative bg-slate-900 rounded-xl p-2 shadow-2xl shadow-slate-900/20">
               <div className="bg-white rounded-lg overflow-hidden">
                 <div className="bg-slate-50 border-b border-slate-100 px-4 py-3 flex items-center gap-2">
@@ -154,11 +154,11 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-24 bg-slate-50 relative overflow-hidden">
+      <section id="features" className="py-24 bg-amber-50/50 relative overflow-hidden">
         {/* Background pattern */}
-        <div className="absolute inset-0 opacity-40">
+        <div className="absolute inset-0 opacity-30">
           <div className="absolute inset-0" style={{
-            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(0,0,0,0.05) 1px, transparent 0)',
+            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(217, 119, 6, 0.1) 1px, transparent 0)',
             backgroundSize: '40px 40px'
           }} />
         </div>
@@ -301,10 +301,10 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700" />
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700" />
         <div className="absolute inset-0 opacity-30">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-0 w-[600px] h-[400px] bg-purple-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-[600px] h-[400px] bg-orange-500/20 rounded-full blur-3xl" />
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">

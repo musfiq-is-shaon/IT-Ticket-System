@@ -82,7 +82,7 @@ export default async function DashboardLayout({
   // If no profile exists yet, show simplified layout
   if (!userData) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-background">
         {/* Simple header */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center px-6">
           <div className="flex items-center gap-2">
@@ -189,7 +189,7 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-background">
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 z-30">
         <div className="flex flex-col h-full">
