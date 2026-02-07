@@ -61,7 +61,7 @@ export default function HomePage() {
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/signup" className="btn-primary px-8 py-3.5 text-base shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all duration-300 hover:-translate-y-0.5">
-                Start Free Trial
+                Get Started
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/login" className="btn-outline px-8 py-3.5 text-base hover:bg-slate-50 transition-all duration-300">
@@ -73,15 +73,15 @@ export default function HomePage() {
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-slate-500">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>No credit card required</span>
+                <span>Free & Open Source</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>14-day free trial</span>
+                <span>Self-Hosted</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>Cancel anytime</span>
+                <span>No Payment Required</span>
               </div>
             </div>
           </div>
@@ -313,12 +313,11 @@ export default function HomePage() {
               Ready to transform your IT support?
             </h2>
             <p className="mt-6 text-lg text-white/80 max-w-2xl mx-auto">
-              Start your free 14-day trial today. No credit card required. 
-              Deploy on your own infrastructure or use our cloud hosting.
+              Deploy on your own infrastructure today. Free, open source, and self-hosted.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/signup" className="btn bg-white text-indigo-600 hover:bg-slate-100 px-8 py-4 text-base shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5">
-                Get Started Free
+                Get Started
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
