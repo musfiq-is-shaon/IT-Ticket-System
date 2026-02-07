@@ -133,6 +133,7 @@ export default async function TicketsPage({
   const userRole = profile.role;
   const canManage = userRole === 'admin' || userRole === 'owner';
   const isRequester = userRole === 'requester';
+  const isAgent = userRole === 'agent';
 
   return (
     <div className="space-y-6">
@@ -141,11 +142,15 @@ export default async function TicketsPage({
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Tickets</h1>
           <p className="text-slate-600 mt-1">
-            Manage and track all support tickets
+            {isRequester 
+              ? 'Manage and track your support tickets'
+              : canManage 
+                ? 'Manage and track all support tickets'
+                : 'Manage and track your assigned tickets'}
           </p>
         </div>
-        {/* Only show New Ticket button for customers */}
-        {isRequester && (
+        {/* Show New Ticket button for owners, admins, and customers */}
+        {(canManage || isRequester) && (
           <Link href="/dashboard/tickets/new" className="btn-primary">
             <Plus className="w-4 h-4" />
             New Ticket
