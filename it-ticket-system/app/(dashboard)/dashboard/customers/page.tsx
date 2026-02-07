@@ -30,6 +30,7 @@ interface Profile {
 interface CustomerWithTickets extends Profile {
   ticket_count: number;
   open_tickets: number;
+  assigned_to_name: string | null;
 }
 
 async function getCustomersData(userId: string) {
@@ -58,11 +59,13 @@ async function getCustomersData(userId: string) {
   }
 
   // Get organization name
-  const { data: org } = await supabase
+  const { data: orgData } = await supabase
     .from('organizations')
     .select('name')
     .eq('id', orgId)
     .single();
+
+  const org = orgData;
 
   // Get all customers (requesters) in the organization
   const { data: customers } = await supabase
@@ -91,10 +94,32 @@ async function getCustomersData(userId: string) {
         .eq('status', 'open')
         .or(`created_by.eq.${customer.id},ticket_code.eq.${customer.ticket_code}`);
 
+      // Get the most recent ticket's assigned agent
+      const { data: recentTickets } = await supabase
+        .from('tickets')
+        .select('assigned_to')
+        .eq('organization_id', orgId)
+        .or(`created_by.eq.${customer.id},ticket_code.eq.${customer.ticket_code}`)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const recentTicket = recentTickets?.[0];
+      let assignedToName: string | null = null;
+      
+      if (recentTicket?.assigned_to) {
+        const { data: assigneeProfile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', recentTicket.assigned_to)
+          .single();
+        assignedToName = assigneeProfile?.full_name || null;
+      }
+
       return {
         ...customer,
         ticket_count: ticketCount || 0,
         open_tickets: openCount || 0,
+        assigned_to_name: assignedToName,
       } as CustomerWithTickets;
     })
   );
@@ -186,8 +211,11 @@ export default async function CustomersPage() {
                 <th className="text-left py-3 px-4 text-xs font-medium uppercase tracking-wider text-slate-500 hidden md:table-cell">
                   Tickets
                 </th>
-                <th className="text-left py-3 px-4 text-xs font-medium uppercase tracking-wider text-slate-500 hidden md:table-cell">
+                <th className="text-left py-3 px-4 text-xs font-medium uppercase tracking-wider text-slate-500">
                   Open
+                </th>
+                <th className="text-left py-3 px-4 text-xs font-medium uppercase tracking-wider text-slate-500">
+                  Assigned To
                 </th>
                 <th className="text-left py-3 px-4 text-xs font-medium uppercase tracking-wider text-slate-500 hidden lg:table-cell">
                   Joined
@@ -234,10 +262,26 @@ export default async function CustomersPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 hidden md:table-cell">
+                    <td className="py-3 px-4">
                       <span className={`badge ${customer.open_tickets > 0 ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-600'}`}>
                         {customer.open_tickets} open
                       </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      {customer.assigned_to_name ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                            <span className="text-xs font-medium text-white">
+                              {customer.assigned_to_name.charAt(0)}
+                            </span>
+                          </div>
+                          <span className="text-sm text-slate-700">
+                            {customer.assigned_to_name}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-slate-400">Unassigned</span>
+                      )}
                     </td>
                     <td className="py-3 px-4 hidden lg:table-cell text-sm text-slate-500">
                       {formatRelativeTime(customer.created_at)}
@@ -257,7 +301,7 @@ export default async function CustomersPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center">
+                  <td colSpan={7} className="py-12 text-center">
                     <Users className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-slate-900 mb-1">
                       No customers yet
