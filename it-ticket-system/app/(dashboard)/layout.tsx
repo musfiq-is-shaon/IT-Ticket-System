@@ -89,7 +89,7 @@ export default async function DashboardLayout({
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <MessageCircle className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-slate-900">IT Tickets</span>
+            <span className="font-bold text-slate-900">IT Ticket System</span>
           </div>
         </header>
 
@@ -199,7 +199,7 @@ export default async function DashboardLayout({
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <MessageCircle className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold text-slate-900">IT Tickets</span>
+              <span className="font-bold text-slate-900">IT Ticket System</span>
             </Link>
           </div>
 
